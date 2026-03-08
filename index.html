@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match Rush - Whop Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-pink: #FF0080;
+            --neon-cyan: #00F0FF;
+            --neon-yellow: #FFFF00;
+            --deep-purple: #1a0033;
+            --dark-purple: #2d1b4e;
+            --bright-white: #ffffff;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--deep-purple) 0%, #0a0015 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-100px) translateX(50px); }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            color: var(--bright-white);
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            text-shadow: 
+                0 0 20px var(--neon-pink),
+                0 0 40px var(--neon-pink),
+                0 0 60px var(--neon-pink);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink); }
+            to { text-shadow: 0 0 30px var(--neon-pink), 0 0 60px var(--neon-pink), 0 0 90px var(--neon-pink); }
+        }
+
+        .subtitle {
+            color: var(--neon-cyan);
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .game-container {
+            background: rgba(45, 27, 78, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 0, 128, 0.3);
+            box-shadow: 
+                0 0 30px rgba(255, 0, 128, 0.3),
+                inset 0 0 20px rgba(0, 240, 255, 0.1);
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            border-color: var(--neon-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--bright-white);
+            text-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        .timer-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            border-radius: 10px;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .color-display {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 0, 128, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .target-color {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 3rem;
+            color: var(--bright-white);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px currentColor;
+            position: relative;
+            z-index: 1;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .color-option {
+            padding: 50px 20px;
+            border-radius: 15px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--bright-white);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .color-option:hover::before {
+            opacity: 1;
+        }
+
+        .color-option:hover {
+            transform: scale(1.05);
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.5);
+        }
+
+        .color-option:active {
+            transform: scale(0.95);
+        }
+
+        .color-option.correct {
+            animation: correctPulse 0.5s;
+            border-color: #00ff00;
+        }
+
+        .color-option.wrong {
+            animation: wrongShake 0.5s;
+            border-color: #ff0000;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 50px #00ff00; }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .start-btn, .restart-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+            border: none;
+            border-radius: 15px;
+            color: var(--bright-white);
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 0, 128, 0.5);
+            font-family: 'Archivo Black', sans-serif;
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 0, 128, 0.7);
+        }
+
+        .start-btn:active, .restart-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .game-over {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .game-over.active {
+            display: block;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            margin: 20px 0;
+            text-shadow: 0 0 30px var(--neon-yellow);
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: var(--neon-cyan);
+            margin-bottom: 20px;
+        }
+
+        .leaderboard {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard h3 {
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .leaderboard-entry:first-child {
+            border-left-color: var(--neon-yellow);
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .instructions {
+            background: rgba(0, 240, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .instructions h3 {
+            color: var(--neon-cyan);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .instructions p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .combo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, var(--neon-yellow), var(--neon-pink));
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s;
+        }
+
+        .combo.active {
+            opacity: 1;
+            transform: scale(1);
+            animation: comboPulse 0.5s infinite;
+        }
+
+        @keyframes comboPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .target-color {
+                font-size: 2rem;
+            }
+
+            .options-grid {
+                gap: 10px;
+            }
+
+            .color-option {
+                padding: 35px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background particles -->
+    <div class="bg-particles" id="particles"></div>
+
+    <div class="container">
+        <header>
+            <h1>Color Match Rush</h1>
+            <p class="subtitle">Beat the Clock • Test Your Speed</p>
+        </header>
+
+        <div class="game-container">
+            <!-- Start Screen -->
+            <div id="startScreen">
+                <div class="instructions">
+                    <h3>🎮 How to Play</h3>
+                    <p><strong>Match the color name with the correct color!</strong></p>
+                    <p>⚡ You have 30 seconds</p>
+                    <p>🎯 Each correct answer = +1 point</p>
+                    <p>❌ Wrong answer = -5 seconds penalty</p>
+                    <p>🔥 Build combos for bonus points!</p>
+                </div>
+                <button class="start-btn" onclick="startGame()">Start Game</button>
+                
+                <div class="leaderboard">
+                    <h3>🏆 Top Scores</h3>
+                    <div id="leaderboardList"></div>
+                </div>
+            </div>
+
+            <!-- Game Screen -->
+            <div id="gameScreen" class="hidden">
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-value" id="streak">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Time</div>
+                        <div class="stat-value" id="timer">30</div>
+                    </div>
+                </div>
+
+                <div class="timer-bar">
+                    <div class="timer-fill" id="timerFill"></div>
+                </div>
+
+                <div class="color-display">
+                    <div class="combo" id="combo">🔥 STREAK!</div>
+                    <div class="target-color" id="targetColor">RED</div>
+                </div>
+
+                <div class="options-grid" id="optionsGrid"></div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="game-over">
+                <h2 style="color: var(--neon-pink); margin-bottom: 10px;">GAME OVER!</h2>
+                <div class="final-score" id="finalScore">0</div>
+                <div class="message" id="message"></div>
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+                
+                <div class="leaderboard">
+                    <h3>🏆 Top Scores</h3>
+                    <div id="finalLeaderboard"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let gameInterval;
+        let currentColorName;
+        let currentColorValue;
+
+        // Color palette
+        const colors = [
+            { name: 'RED', value: '#FF3366' },
+            { name: 'BLUE', value: '#3366FF' },
+            { name: 'GREEN', value: '#33FF66' },
+            { name: 'YELLOW', value: '#FFFF33' },
+            { name: 'PURPLE', value: '#9933FF' },
+            { name: 'ORANGE', value: '#FF9933' },
+            { name: 'PINK', value: '#FF33CC' },
+            { name: 'CYAN', value: '#33FFFF' }
+        ];
+
+        // Generate background particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Load leaderboard from localStorage
+        function getLeaderboard() {
+            const saved = localStorage.getItem('colorMatchLeaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        // Save to leaderboard
+        function saveToLeaderboard(score) {
+            let leaderboard = getLeaderboard();
+            leaderboard.push({ score, date: new Date().toLocaleDateString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10); // Keep top 10
+            localStorage.setItem('colorMatchLeaderboard', JSON.stringify(leaderboard));
+        }
+
+        // Display leaderboard
+        function displayLeaderboard(elementId) {
+            const leaderboard = getLeaderboard();
+            const container = document.getElementById(elementId);
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">No scores yet. Be the first!</p>';
+                return;
+            }
+
+            container.innerHTML = leaderboard.map((entry, index) => `
+                <div class="leaderboard-entry">
+                    <span>${index + 1}. ${entry.score} points</span>
+                    <span style="opacity: 0.6;">${entry.date}</span>
+                </div>
+            `).join('');
+        }
+
+        // Generate new round
+        function generateRound() {
+            // Pick random color for the word
+            const wordColor = colors[Math.floor(Math.random() * colors.length)];
+            currentColorName = wordColor.name;
+            
+            // Display the word in a random color (might not match!)
+            const displayColor = colors[Math.floor(Math.random() * colors.length)];
+            const targetElement = document.getElementById('targetColor');
+            targetElement.textContent = currentColorName;
+            targetElement.style.color = displayColor.value;
+
+            // Generate 4 options
+            const options = [wordColor];
+            while (options.length < 4) {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                if (!options.find(c => c.name === randomColor.name)) {
+                    options.push(randomColor);
+                }
+            }
+
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+
+            // Display options
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = options.map(color => `
+                <button class="color-option" style="background: ${color.value};" 
+                        onclick="checkAnswer('${color.name}', this)">
+                    ${color.name}
+                </button>
+            `).join('');
+
+            currentColorValue = wordColor.value;
+        }
+
+        // Check answer
+        function checkAnswer(selectedColor, button) {
+            if (!gameActive) return;
+
+            const allButtons = document.querySelectorAll('.color-option');
+            allButtons.forEach(btn => btn.style.pointerEvents = 'none');
+
+            if (selectedColor === currentColorName) {
+                button.classList.add('correct');
+                score++;
+                streak++;
+                
+                // Combo bonus
+                if (streak >= 3) {
+                    score += Math.floor(streak / 3);
+                    document.getElementById('combo').classList.add('active');
+                }
+                
+                updateScore();
+                
+                setTimeout(() => {
+                    allButtons.forEach(btn => btn.style.pointerEvents = 'auto');
+                    generateRound();
+                }, 300);
+            } else {
+                button.classList.add('wrong');
+                timeLeft = Math.max(0, timeLeft - 5); // Penalty
+                streak = 0;
+                document.getElementById('combo').classList.remove('active');
+                updateScore();
+                
+                setTimeout(() => {
+                    allButtons.forEach(btn => btn.style.pointerEvents = 'auto');
+                    button.classList.remove('wrong');
+                }, 500);
+            }
+        }
+
+        // Update score display
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        // Update timer
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            const timerFill = document.getElementById('timerFill');
+            
+            timerElement.textContent = timeLeft;
+            timerFill.style.width = (timeLeft / 30 * 100) + '%';
+
+            if (timeLeft <= 5) {
+                timerElement.style.color = '#ff0000';
+            }
+        }
+
+        // Start game
+        function startGame() {
+            score = 0;
+            streak = 0;
+            timeLeft = 30;
+            gameActive = true;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameOverScreen').classList.remove('active');
+
+            updateScore();
+            updateTimer();
+            generateRound();
+
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // End game
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('active');
+            document.getElementById('finalScore').textContent = score;
+
+            // Save score
+            saveToLeaderboard(score);
+
+            // Display message based on score
+            let message = '';
+            if (score >= 30) message = '🔥 LEGENDARY! You\'re a color master!';
+            else if (score >= 20) message = '⭐ AMAZING! Great reflexes!';
+            else if (score >= 10) message = '👍 Nice work! Keep practicing!';
+            else message = '💪 Good try! You\'ll do better next time!';
+            
+            document.getElementById('message').textContent = message;
+            displayLeaderboard('finalLeaderboard');
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('gameOverScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.remove('hidden');
+            displayLeaderboard('leaderboardList');
+        }
+
+        // Initialize
+        createParticles();
+        displayLeaderboard('leaderboardList');
+    </script>
+</body>
+</html>
